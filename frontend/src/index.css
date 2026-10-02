@@ -1,0 +1,218 @@
+/* Fonts loaded via index.html link tag */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================================
+   EcoPulse 360 — Global Design System
+   Schneider Electric Industrial BMS Aesthetics
+   ============================================================================ */
+
+:root {
+  --bg-primary: #060A15;
+  --bg-secondary: #0B1120;
+  --bg-card: #0F172A;
+  --bg-card-hover: #1E293B;
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-glow: rgba(0, 163, 0, 0.3);
+  --text-primary: #F1F5F9;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+  --schneider-green: #00A300;
+  --schneider-green-dim: #008A00;
+  --emerald-glow: #059669;
+  --glass-bg: rgba(15, 23, 42, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.08);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Glass card base */
+@layer components {
+  .glass-card {
+    @apply rounded-xl border backdrop-blur-md;
+    background: var(--glass-bg);
+    border-color: var(--glass-border);
+    transition: all 0.3s ease;
+  }
+
+  .glass-card:hover {
+    border-color: rgba(0, 163, 0, 0.2);
+    box-shadow: 0 0 20px rgba(0, 163, 0, 0.05);
+  }
+
+  .glass-card-static {
+    @apply rounded-xl border backdrop-blur-md;
+    background: var(--glass-bg);
+    border-color: var(--glass-border);
+  }
+
+  /* Metric card glow variants */
+  .metric-card {
+    @apply glass-card p-5 relative overflow-hidden;
+  }
+
+  .metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--schneider-green), transparent);
+    opacity: 0.6;
+  }
+
+  /* Section divider */
+  .section-divider {
+    @apply my-8 border-t;
+    border-color: var(--border-subtle);
+  }
+
+  /* Severity badges */
+  .badge-critical {
+    @apply px-2.5 py-0.5 rounded-full text-xs font-semibold;
+    background: rgba(239, 68, 68, 0.15);
+    color: #F87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+  .badge-warning {
+    @apply px-2.5 py-0.5 rounded-full text-xs font-semibold;
+    background: rgba(245, 158, 11, 0.15);
+    color: #FBBF24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+  }
+  .badge-info {
+    @apply px-2.5 py-0.5 rounded-full text-xs font-semibold;
+    background: rgba(59, 130, 246, 0.15);
+    color: #60A5FA;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+  }
+  .badge-success {
+    @apply px-2.5 py-0.5 rounded-full text-xs font-semibold;
+    background: rgba(0, 163, 0, 0.15);
+    color: #4ADE80;
+    border: 1px solid rgba(0, 163, 0, 0.3);
+  }
+
+  /* Status dot */
+  .status-dot {
+    @apply w-2 h-2 rounded-full inline-block;
+  }
+  .status-dot-live {
+    @apply status-dot bg-green-400;
+    animation: pulseGlow 2s ease-in-out infinite;
+    box-shadow: 0 0 6px rgba(74, 222, 128, 0.6);
+  }
+
+  /* Zone heatmap tile */
+  .zone-tile {
+    @apply glass-card p-4 cursor-pointer transition-all duration-300;
+  }
+  .zone-tile:hover {
+    @apply scale-[1.02];
+    border-color: rgba(0, 163, 0, 0.4);
+    box-shadow: 0 4px 30px rgba(0, 163, 0, 0.1);
+  }
+
+  /* Vote buttons */
+  .vote-btn {
+    @apply px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200 border;
+    background: var(--glass-bg);
+    border-color: var(--glass-border);
+  }
+  .vote-btn:hover {
+    @apply scale-105;
+  }
+  .vote-btn:active {
+    @apply scale-95;
+  }
+
+  /* Gauge ring */
+  .gauge-ring {
+    transition: stroke-dashoffset 1s ease-in-out;
+  }
+
+  /* Section header */
+  .section-header {
+    @apply flex items-center gap-3 mb-6;
+  }
+  .section-header h2 {
+    @apply text-xl font-bold text-white;
+  }
+  .section-header .icon-box {
+    @apply w-10 h-10 rounded-lg flex items-center justify-center;
+    background: rgba(0, 163, 0, 0.15);
+    color: var(--schneider-green);
+  }
+}
+
+/* Recharts custom */
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: rgba(255, 255, 255, 0.04) !important;
+}
+.recharts-text {
+  fill: var(--text-muted) !important;
+  font-size: 11px !important;
+}
+.recharts-tooltip-wrapper {
+  outline: none !important;
+}
+
+/* PMV gauge gradient */
+.pmv-gradient {
+  background: linear-gradient(90deg, #3B82F6, #22D3EE, #4ADE80, #FBBF24, #F87171);
+  border-radius: 999px;
+}
+
+/* Animate on scroll helper */
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.animate-on-scroll.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Sparkline mini chart */
+.sparkline-container {
+  width: 80px;
+  height: 28px;
+}
