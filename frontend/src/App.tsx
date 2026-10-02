@@ -16,13 +16,25 @@ import {
   BatteryCharging, CheckCircle2, Lightbulb, Brain, Eye, Gauge,
   ChevronRight, X, Wrench, Plug,
   ArrowRight, Target, Sliders, Radio, Sparkles,
-  HeartPulse, Award, Menu, Wifi, WifiOff, Database,
+  HeartPulse, Award, Menu, Wifi, WifiOff, Database, Flame, ShieldAlert, Cpu
 } from 'lucide-react';
 import { useDataProvider } from './lib/data-provider';
 import type {
   ZoneId, OccupantVote, HVACMode, PageId,
   WhatIfScenario, DemoOverrides,
 } from './types/telemetry';
+
+import { AboutPage } from './components/AboutPage';
+import { DataBadge, DataConnectorModal } from './components/DataTransparencyModal';
+import { PredictorPage } from './components/PredictorPage';
+import { RecommendationPage } from './components/RecommendationPage';
+import { SmartLoadManagerPage } from './components/SmartLoadManagerPage';
+import { LoadSheddingPage } from './components/LoadSheddingPage';
+import { StorageManagerPage } from './components/StorageManagerPage';
+import { PublicPortalPage } from './components/PublicPortalPage';
+import { CoordinationCenterPage } from './components/CoordinationCenterPage';
+import { MLModelPage } from './components/MLModelPage';
+
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -156,16 +168,23 @@ function CustomTooltip({ active, payload, label }: any) {
 // ── Navigation Items ─────────────────────────────────────────────────────────
 
 const NAV_ITEMS: { id: PageId; label: string; icon: any }[] = [
-  { id: 'overview', label: 'Overview', icon: Activity },
-  { id: 'ai-insights', label: 'AI Insights', icon: Brain },
-  { id: 'forecast', label: 'Forecast', icon: TrendingUp },
-  { id: 'energy', label: 'Energy', icon: Zap },
+  { id: 'about', label: 'About Eco 360', icon: Info },
+  { id: 'overview', label: 'Dashboard', icon: Activity },
+  { id: 'predictor', label: 'Predictor', icon: TrendingUp },
+  { id: 'recommendations', label: 'Recommendations', icon: Brain },
+  { id: 'smart-load', label: 'Smart Load Manager', icon: Sliders },
+  { id: 'load-shedding', label: 'Load Shedding', icon: Flame },
+  { id: 'storage', label: 'Storage Manager', icon: BatteryCharging },
+  { id: 'public-portal', label: 'Public Portal', icon: Users },
+  { id: 'co-ordination', label: 'Co-ordination', icon: ShieldAlert },
+  { id: 'ml-model', label: 'ML Architecture', icon: Cpu },
   { id: 'digital-twin', label: 'Digital Twin', icon: Building2 },
   { id: 'equipment', label: 'Equipment', icon: Wrench },
   { id: 'renewables', label: 'Renewables', icon: Sun },
-  { id: 'optimization', label: 'Optimization', icon: Sliders },
-  { id: 'occupant', label: 'Occupant', icon: Users },
+  { id: 'optimization', label: 'What-If Simulator', icon: Target },
+  { id: 'occupant', label: 'Occupant Feedback', icon: Smile },
 ];
+
 
 // ╔═══════════════════════════════════════════════════════════════════════════╗
 // ║  MAIN APPLICATION                                                       ║
@@ -184,7 +203,9 @@ export default function App() {
   const [page, setPage] = useState<PageId>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [dataModalOpen, setDataModalOpen] = useState(false);
   const [selectedZone, setSelectedZone] = useState<ZoneId | null>(null);
+
   const [voteFlash, setVoteFlash] = useState<string | null>(null);
   const [demoOpen, setDemoOpen] = useState(false);
   const [whatIf, setWhatIf] = useState<WhatIfScenario>({ hvacOptimization: 15, lightingOptimization: 20, occupancyControl: 10, loadShifting: 10, solarUtilization: 80, batteryUsage: 60 });
@@ -269,6 +290,13 @@ export default function App() {
             <div className="hidden md:flex items-center gap-1.5 text-xs text-slate-500"><MapPin size={12} />Schneider Tower — Bengaluru</div>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setDataModalOpen(true)}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold transition-all"
+            >
+              <Database size={13} />
+              <span>Connect Data Source</span>
+            </button>
             {/* Building Score mini */}
             <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-lg bg-white/5 border border-white/10">
               <Award size={14} className="text-green-400" />
@@ -380,7 +408,45 @@ export default function App() {
           {/* ║  PAGE: OVERVIEW                                                 ║ */}
           {/* ╚══════════════════════════════════════════════════════════════════╝ */}
           {page === 'overview' && (<>
+            {/* Hierarchical Zone Drill-down Bar (Building -> Floor -> Zone -> Room -> Equipment) */}
+            <div className="p-3.5 rounded-xl border bg-slate-900/80 border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs mb-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-bold text-white uppercase text-[10px] tracking-wider">Hierarchy Scope:</span>
+                <span className="px-2 py-0.5 rounded bg-green-500/15 text-green-400 font-bold border border-green-500/30">
+                  Building A
+                </span>
+                <ArrowRight size={10} className="text-slate-500" />
+                <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                  Floor 3
+                </span>
+                <ArrowRight size={10} className="text-slate-500" />
+                <select
+                  value={selectedZone || 'workstations'}
+                  onChange={(e) => setSelectedZone(e.target.value as ZoneId)}
+                  className="bg-slate-950 text-green-400 border border-slate-800 rounded px-2 py-0.5 font-bold focus:outline-none"
+                >
+                  <option value="workstations">Zone 3A Main Workstations</option>
+                  <option value="boardroom">Zone 3B Executive Boardroom</option>
+                  <option value="cafeteria">Zone 3C Cafeteria</option>
+                  <option value="server_room">Zone 3D Server Room</option>
+                </select>
+                <ArrowRight size={10} className="text-slate-500" />
+                <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                  Room 301 (Open Workspace East)
+                </span>
+                <ArrowRight size={10} className="text-slate-500" />
+                <span className="px-2 py-0.5 rounded bg-slate-800 text-cyan-400 border border-slate-700">
+                  AHU-3A Primary Fan
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <DataBadge source="CEA & SpaceLogic Meter #SM-301" type="gov" />
+              </div>
+            </div>
+
             {/* Building Score + Metrics */}
+
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
               <Card className="flex flex-col items-center justify-center">
                 <ScoreRing score={buildingScore.overall} label="Building Score" size={90} />
@@ -1143,7 +1209,22 @@ export default function App() {
             </Card>
           </>)}
 
+          {/* ╔══════════════════════════════════════════════════════════════════╗ */}
+          {/* ║  NEW ECO 360 MODULES                                             ║ */}
+          {/* ╚══════════════════════════════════════════════════════════════════╝ */}
+          {page === 'about' && <AboutPage />}
+          {page === 'predictor' && <PredictorPage />}
+          {page === 'recommendations' && <RecommendationPage />}
+          {page === 'smart-load' && <SmartLoadManagerPage />}
+          {page === 'load-shedding' && <LoadSheddingPage />}
+          {page === 'storage' && <StorageManagerPage />}
+          {page === 'public-portal' && <PublicPortalPage onVote={(z, v) => handleVote(z as ZoneId, v as OccupantVote)} />}
+          {page === 'co-ordination' && <CoordinationCenterPage />}
+          {page === 'ml-model' && <MLModelPage />}
+
+          <DataConnectorModal isOpen={dataModalOpen} onClose={() => setDataModalOpen(false)} />
         </main>
+
 
         {/* Footer */}
         <footer className="h-8 flex items-center justify-center border-t flex-shrink-0 text-[9px] text-slate-600" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>

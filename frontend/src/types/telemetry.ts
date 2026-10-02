@@ -20,7 +20,26 @@ export type OccupantVote = 'too_cold' | 'comfortable' | 'too_warm';
 export type ThermalSensation = 'Cold' | 'Cool' | 'Slightly Cool' | 'Neutral' | 'Slightly Warm' | 'Warm' | 'Hot';
 
 /** Navigation page keys */
-export type PageId = 'overview' | 'energy' | 'digital-twin' | 'ai-insights' | 'forecast' | 'equipment' | 'renewables' | 'optimization' | 'occupant';
+export type PageId =
+  | 'about'            // 1. Description / About Eco 360
+  | 'overview'         // 2. Dashboard Upgrade (Building->Floor->Zone->Room->Equipment)
+  | 'predictor'        // 3. Predictor Page
+  | 'recommendations'  // 4. Recommendation Model
+  | 'smart-load'       // 5. Smart Load Manager
+  | 'load-shedding'    // 6. Load Shedding / Power Roster
+  | 'storage'          // 7. Storage Manager
+  | 'public-portal'    // 8. Public Portal
+  | 'co-ordination'    // 9. Co-ordination Center
+  | 'ml-model'         // 10. Technical ML Model Section
+  | 'digital-twin'     // Preserved
+  | 'equipment'        // Preserved
+  | 'renewables'       // Preserved
+  | 'optimization'     // Preserved
+  | 'occupant'         // Preserved
+  | 'ai-insights'      // Preserved alias for recommendations
+  | 'forecast'         // Preserved alias for predictor
+  | 'energy';          // Preserved alias
+
 
 /** HVAC control modes */
 export type HVACMode = 'auto' | 'comfort' | 'energy_saver' | 'peak_reduction';
