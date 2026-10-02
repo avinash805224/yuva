@@ -33,6 +33,7 @@ import { LoadSheddingPage } from './components/LoadSheddingPage';
 import { StorageManagerPage } from './components/StorageManagerPage';
 import { PublicPortalPage } from './components/PublicPortalPage';
 import { CoordinationCenterPage } from './components/CoordinationCenterPage';
+import { MisuseAlarmCenter } from './components/MisuseAlarmCenter';
 import { MLModelPage } from './components/MLModelPage';
 
 
@@ -177,6 +178,7 @@ const NAV_ITEMS: { id: PageId; label: string; icon: any }[] = [
   { id: 'storage', label: 'Storage Manager', icon: BatteryCharging },
   { id: 'public-portal', label: 'Public Portal', icon: Users },
   { id: 'co-ordination', label: 'Co-ordination', icon: ShieldAlert },
+  { id: 'misuse-alarm', label: 'Misuse Alarms', icon: AlertTriangle },
   { id: 'ml-model', label: 'ML Architecture', icon: Cpu },
   { id: 'digital-twin', label: 'Digital Twin', icon: Building2 },
   { id: 'equipment', label: 'Equipment', icon: Wrench },
@@ -1220,6 +1222,7 @@ export default function App() {
           {page === 'storage' && <StorageManagerPage />}
           {page === 'public-portal' && <PublicPortalPage onVote={(z, v) => handleVote(z as ZoneId, v as OccupantVote)} />}
           {page === 'co-ordination' && <CoordinationCenterPage />}
+          {page === 'misuse-alarm' && <MisuseAlarmCenter />}
           {page === 'ml-model' && <MLModelPage />}
 
           <DataConnectorModal isOpen={dataModalOpen} onClose={() => setDataModalOpen(false)} />

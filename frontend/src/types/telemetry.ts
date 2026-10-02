@@ -30,7 +30,8 @@ export type PageId =
   | 'storage'          // 7. Storage Manager
   | 'public-portal'    // 8. Public Portal
   | 'co-ordination'    // 9. Co-ordination Center
-  | 'ml-model'         // 10. Technical ML Model Section
+  | 'misuse-alarm'     // 10. Misuse Alarm Center
+  | 'ml-model'         // 11. Technical ML Model Section
   | 'digital-twin'     // Preserved
   | 'equipment'        // Preserved
   | 'renewables'       // Preserved
