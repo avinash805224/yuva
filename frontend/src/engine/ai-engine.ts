@@ -65,6 +65,22 @@ export function generateAIInsights(
   // --- Per-zone analysis ---
   for (const zone of zones) {
     const c = comfort.find(x => x.zoneId === zone.zoneId);
+    if (c && Math.abs(c.pmv) > 0.8) {
+      insights.push({
+        id: `ai-${++insightIdCounter}`,
+        title: `Thermal Discomfort in ${zone.zoneName}`,
+        problem: `PMV is ${c.pmv > 0 ? '+' : ''}${round1(c.pmv)} (PPD: ${round0(c.ppd)}%), outside ASHRAE 55 band.`,
+        reason: c.pmv > 0 ? 'Zone temperature exceeds thermal comfort setpoint.' : 'Zone is overcooled.',
+        action: c.pmv > 0 ? 'Increase airflow or optimize setpoint.' : 'Raise cooling setpoint by 1°C.',
+        energySaving: c.pmv < 0 ? round1(zone.hvacPower * 0.08 * 8) : 0,
+        costSaving: c.pmv < 0 ? round0(zone.hvacPower * 0.08 * 8 * BASE_TARIFF) : 0,
+        co2Reduction: c.pmv < 0 ? round1(zone.hvacPower * 0.08 * 8 * CEA_FACTOR) : 0,
+        confidence: 91,
+        severity: Math.abs(c.pmv) > 1.2 ? 'warning' : 'info',
+        category: 'hvac',
+        timestamp: now,
+      });
+    }
     const occPct = zone.occupancy / zone.maxOccupancy;
 
     // Server room high power + low occupancy
@@ -167,7 +183,7 @@ export function generateAIInsights(
 // 2. ENERGY FORECASTING
 // ============================================================================
 
-export function generateForecast(overview: BuildingOverview, period: 'today' | 'tomorrow' | '7days'): {
+export function generateForecast(_overview: BuildingOverview, period: 'today' | 'tomorrow' | '7days'): {
   points: ForecastPoint[];
   summary: ForecastSummary;
 } {
@@ -532,7 +548,6 @@ export function generateGridFlexibility(overview: BuildingOverview): GridFlexibi
   ];
   const flexibleTotal = round1(flexibleLoads.reduce((s, l) => s + l.power, 0));
   const shiftedLoad = round1(flexibleTotal * 0.65);
-  const afterShift = round1(overview.totalPower - shiftedLoad);
   const peakReduction = round1((shiftedLoad / overview.totalPower) * 100);
 
   return {
@@ -585,9 +600,9 @@ export function calculateWhatIf(overview: BuildingOverview, scenario: WhatIfScen
 // ============================================================================
 
 export function generateRecommendations(
-  zones: ZoneTelemetry[],
-  overview: BuildingOverview,
-  equipment: EquipmentHealth[],
+  _zones: ZoneTelemetry[],
+  _overview: BuildingOverview,
+  _equipment: EquipmentHealth[],
 ): AIRecommendation[] {
   const recs: AIRecommendation[] = [
     {

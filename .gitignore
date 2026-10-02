@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment files
+.env
+.env*.local
+frontend/.env
+frontend/.env*.local
+
+# Build artifacts
+dist/
+dist-ssr/
+*.local
+
+# Logs
+*.log

@@ -4,7 +4,7 @@
 // SENSE → ANALYZE → PREDICT → OPTIMIZE → RECOMMEND → CONTROL → MEASURE
 // ============================================================================
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend, LineChart, Line, BarChart, Bar,
@@ -13,20 +13,16 @@ import {
   Zap, BarChart3, IndianRupee, Leaf, Star, Thermometer, Droplets, Wind,
   Users, Sun, AlertTriangle, AlertCircle, Info, Shield, TrendingDown,
   TrendingUp, Activity, Building2, Bell, Clock, Snowflake, Smile, MapPin,
-  BatteryCharging, CheckCircle2, Lightbulb, Server, Brain, Eye, Gauge,
-  Settings, ChevronRight, ChevronDown, X, Wrench, Cpu, Fan, Plug,
-  ArrowRight, ArrowDown, Target, Sliders, Radio, Hash, Sparkles,
-  HeartPulse, Award, Factory, Menu,
+  BatteryCharging, CheckCircle2, Lightbulb, Brain, Eye, Gauge,
+  ChevronRight, X, Wrench, Plug,
+  ArrowRight, Target, Sliders, Radio, Sparkles,
+  HeartPulse, Award, Menu, Wifi, WifiOff, Database,
 } from 'lucide-react';
-import { BuildingSimulator } from './engine/simulator';
-import { calculateWhatIf } from './engine/ai-engine';
+import { useDataProvider } from './lib/data-provider';
 import type {
-  BuildingState, ZoneId, OccupantVote, HVACMode, PageId,
+  ZoneId, OccupantVote, HVACMode, PageId,
   WhatIfScenario, DemoOverrides,
 } from './types/telemetry';
-
-// Singleton simulator
-const simulator = new BuildingSimulator();
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -176,7 +172,15 @@ const NAV_ITEMS: { id: PageId; label: string; icon: any }[] = [
 // ╚═══════════════════════════════════════════════════════════════════════════╝
 
 export default function App() {
-  const [state, setState] = useState<BuildingState>(() => simulator.tick());
+  // ── Hybrid Data Provider (simulator + Supabase persistence + realtime) ──
+  const {
+    state, connection, latencyMs, isConfigured, persistedCount,
+    handleVote: dpVote, handleAck, handleDR, handleHVACMode,
+    handleToggleRec, handleForecastPeriod: dpForecastPeriod,
+    handleDemoChange: dpDemoChange, calculateWhatIfResult,
+  } = useDataProvider();
+
+  // ── Local UI state ──
   const [page, setPage] = useState<PageId>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -186,39 +190,33 @@ export default function App() {
   const [whatIf, setWhatIf] = useState<WhatIfScenario>({ hvacOptimization: 15, lightingOptimization: 20, occupancyControl: 10, loadShifting: 10, solarUtilization: 80, batteryUsage: 60 });
   const [shiftApplied, setShiftApplied] = useState(false);
   const [forecastPeriod, setForecastPeriod] = useState<'today' | 'tomorrow' | '7days'>('today');
-
-  // Demo overrides
   const [demo, setDemo] = useState<DemoOverrides>({ occupancyMultiplier: 1, temperatureOffset: 0, solarMultiplier: 1, gridLoadMultiplier: 1, hvacLoadMultiplier: 1 });
 
-  useEffect(() => {
-    const interval = setInterval(() => setState(simulator.tick()), 3000);
-    return () => clearInterval(interval);
-  }, []);
+  const handleDemoChange = (key: keyof DemoOverrides, val: number) => {
+    setDemo(prev => ({ ...prev, [key]: val }));
+    dpDemoChange(key, val);
+  };
 
-  const handleVote = useCallback((zoneId: ZoneId, vote: OccupantVote) => {
-    simulator.submitVote(zoneId, vote);
+  // Wrap vote handler with flash animation
+  const handleVote = (zoneId: ZoneId, vote: OccupantVote) => {
+    dpVote(zoneId, vote);
     setVoteFlash(`${zoneId}-${vote}`);
     setTimeout(() => setVoteFlash(null), 1200);
-    setState(simulator.tick());
-  }, []);
+  };
 
-  const handleAck = useCallback((id: string) => { simulator.acknowledgeAlert(id); setState(simulator.tick()); }, []);
-  const handleDR = useCallback(() => { simulator.triggerDR(state.demandResponse.status === 'idle'); setState(simulator.tick()); }, [state.demandResponse.status]);
-  const handleHVACMode = useCallback((zoneId: ZoneId, mode: HVACMode) => { simulator.setHVACMode(zoneId, mode); setState(simulator.tick()); }, []);
-  const handleToggleRec = useCallback((id: string) => { simulator.toggleRecommendation(id); setState(simulator.tick()); }, []);
-  const handleForecastPeriod = useCallback((p: 'today' | 'tomorrow' | '7days') => { setForecastPeriod(p); simulator.setForecastPeriod(p); setState(simulator.tick()); }, []);
-  const handleDemoChange = useCallback((key: keyof DemoOverrides, val: number) => {
-    const next = { ...demo, [key]: val };
-    setDemo(next);
-    simulator.setDemoOverrides(next);
-  }, [demo]);
+  // Wrap forecast period handler to also update local UI state
+  const handleForecastPeriod = (p: 'today' | 'tomorrow' | '7days') => {
+    setForecastPeriod(p);
+    dpForecastPeriod(p);
+  };
 
+  // ── Destructure building state ──
   const { overview, zones, comfort, alerts, demandResponse, energyHistory, occupantVotes,
     aiInsights, forecast, forecastSummary, occupancyIntelligence, smartHVAC,
     equipmentHealth, anomalies, renewables, gridFlexibility, recommendations,
     occupantExperience, buildingScore, carbon, notifications } = state;
 
-  const whatIfResult = calculateWhatIf(overview, whatIf);
+  const whatIfResult = calculateWhatIfResult(whatIf);
   const time = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
   const unreadNotifs = notifications.filter(n => !n.read).length;
 
@@ -282,6 +280,30 @@ export default function App() {
             {(demo.occupancyMultiplier !== 1 || demo.temperatureOffset !== 0 || demo.solarMultiplier !== 1) && (
               <Badge text="⚡ DEMO" color="amber" />
             )}
+            {/* Supabase connection status */}
+            <div className="hidden md:flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/5 border border-white/10" title={
+              connection === 'online' ? `Supabase connected (${latencyMs}ms) · ${persistedCount} records synced` :
+              connection === 'connecting' ? 'Connecting to Supabase...' :
+              connection === 'error' ? 'Supabase connection error' :
+              isConfigured ? 'Supabase offline' : 'Running in offline simulation mode'
+            }>
+              {connection === 'online' ? <Wifi size={11} className="text-green-400" /> :
+               connection === 'connecting' ? <Wifi size={11} className="text-amber-400 animate-pulse" /> :
+               connection === 'error' ? <WifiOff size={11} className="text-red-400" /> :
+               <WifiOff size={11} className="text-slate-500" />}
+              <span className={`text-[9px] font-medium ${
+                connection === 'online' ? 'text-green-400' :
+                connection === 'connecting' ? 'text-amber-400' :
+                connection === 'error' ? 'text-red-400' : 'text-slate-500'
+              }`}>
+                {connection === 'online' ? `${latencyMs}ms` :
+                 connection === 'connecting' ? 'Syncing' :
+                 connection === 'error' ? 'Error' : 'Offline'}
+              </span>
+              {connection === 'online' && persistedCount > 0 && (
+                <><Database size={9} className="text-slate-500" /><span className="text-[8px] text-slate-500">{persistedCount}</span></>
+              )}
+            </div>
             {/* Notifications */}
             <button onClick={() => setNotifOpen(!notifOpen)} className="relative p-1.5 rounded-lg hover:bg-white/5">
               <Bell size={16} className="text-slate-400" />

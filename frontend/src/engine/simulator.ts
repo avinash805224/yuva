@@ -8,8 +8,7 @@
 import type {
   ZoneId, ZoneTelemetry, ComfortMetrics, FDDAlert, DemandResponseState,
   BuildingOverview, BuildingState, EnergyHistoryPoint, ThermalSensation,
-  AlertSeverity, DREventStatus, OccupantVote, HVACMode, DemoOverrides,
-  WhatIfScenario,
+  DREventStatus, OccupantVote, HVACMode, DemoOverrides,
 } from '../types/telemetry';
 import {
   generateAIInsights, generateForecast, generateOccupancyIntelligence,
@@ -116,7 +115,7 @@ function occupancyFraction(zoneId: ZoneId, hour: number): number {
       if (h >= 16 && h <= 17) return 0.35; // tea time
       return 0.12 + gaussianNoise(0.03);
     },
-    server_room: (h) => {
+    server_room: () => {
       // Very low human presence, constant equipment load
       return Math.random() < 0.08 ? 0.5 : 0.0;
     },
