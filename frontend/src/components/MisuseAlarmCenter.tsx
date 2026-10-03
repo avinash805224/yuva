@@ -4,7 +4,7 @@
 // Features: Audio/Visual Alerting, Auto-Rectification, Sensitivity Controls, Test Trigger
 // ============================================================================
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   AlertCircle, ShieldAlert, CheckCircle2, Volume2, VolumeX
 } from 'lucide-react';
@@ -60,10 +60,10 @@ export function MisuseAlarmBanner({ alarms, onRectify }: { alarms: MisuseAlarm[]
   const primary = activeAlarms[0];
 
   return (
-    <div className="rounded-xl border border-red-500/50 bg-red-950/40 p-4 backdrop-blur-md shadow-xl animate-pulse">
+    <div className="rounded-xl border border-red-500/30 bg-red-950/20 p-4">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
         <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-xl bg-red-500/20 text-red-400 flex items-center justify-center flex-shrink-0 animate-bounce">
+          <div className="w-10 h-10 rounded-xl bg-red-500/10 text-red-400 flex items-center justify-center flex-shrink-0">
             <ShieldAlert size={22} />
           </div>
           <div>
@@ -84,7 +84,7 @@ export function MisuseAlarmBanner({ alarms, onRectify }: { alarms: MisuseAlarm[]
           </span>
           <button
             onClick={() => onRectify(primary.id)}
-            className="px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-slate-950 font-extrabold text-xs flex items-center gap-1.5 shadow-lg shadow-green-500/20 transition-all"
+            className="px-3 py-1 rounded-lg bg-green-500 hover:bg-green-600 text-slate-950 font-bold text-xs flex items-center gap-1"
           >
             <CheckCircle2 size={14} /> Auto-Rectify Misuse & Silence
           </button>
@@ -96,7 +96,19 @@ export function MisuseAlarmBanner({ alarms, onRectify }: { alarms: MisuseAlarm[]
 
 export function MisuseAlarmCenter() {
   const [alarms, setAlarms] = useState<MisuseAlarm[]>(INITIAL_MISUSE_ALARMS);
+  const alarmAudio = useRef<HTMLAudioElement>(new Audio('https://www.soundjay.com/button/sounds/beep-07.mp3'));
+  const previousActiveCount = useRef<number>(0);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+
+  // Play sound when a new active alarm appears
+  useEffect(() => {
+    const activeCount = alarms.filter(a => a.status === 'ACTIVE_ALARM').length;
+    if (soundEnabled && activeCount > previousActiveCount.current) {
+      alarmAudio.current.currentTime = 0;
+      alarmAudio.current.play().catch(() => {});
+    }
+    previousActiveCount.current = activeCount;
+  }, [alarms, soundEnabled]);
   const [autoRectifyEnabled, setAutoRectifyEnabled] = useState<boolean>(false);
   const [sensitivity, setSensitivity] = useState<'LOW' | 'MEDIUM' | 'HIGH'>('HIGH');
 
@@ -151,7 +163,7 @@ export function MisuseAlarmCenter() {
 
           <button
             onClick={handleTriggerTestAlarm}
-            className="px-3.5 py-1.5 rounded-lg bg-red-500 hover:bg-red-600 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-lg shadow-red-500/25 transition-all"
+            className="px-3 py-1 rounded-lg bg-red-500 hover:bg-red-600 text-white font-bold text-xs flex items-center gap-1 transition-all"
           >
             <AlertCircle size={14} /> Trigger Test Misuse Alarm
           </button>
